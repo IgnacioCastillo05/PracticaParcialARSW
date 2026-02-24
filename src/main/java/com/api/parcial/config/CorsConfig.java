@@ -1,4 +1,4 @@
-package com.api.parcial.config;
+package main.java.com.api.parcial.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

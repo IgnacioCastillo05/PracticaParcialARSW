@@ -1,4 +1,4 @@
-package com.api.parcial.config;
+package main.java.com.api.parcial.config;
 
 import com.api.parcial.provider.AlphaVantageProvider;
 import com.api.parcial.provider.StockProvider;

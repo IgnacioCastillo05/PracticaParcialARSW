@@ -1,4 +1,4 @@
-package com.api.parcial.controller;
+package main.java.com.api.parcial.controller;
 
 import com.api.parcial.model.StockResponse;
 import com.api.parcial.service.StockFacadeService;

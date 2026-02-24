@@ -1,4 +1,4 @@
-package com.api.parcial.cache;
+package main.java.com.api.parcial.cache;
 
 import com.api.parcial.model.StockResponse;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,4 @@
-package java.com.api.parcial.service;
+package main.java.com.api.parcial.service;
 
 import com.api.parcial.cache.StockCache;
 import com.api.parcial.provider.StockProvider;

@@ -1,4 +1,4 @@
-package com.api.parcial.provider;
+package main.java.com.api.parcial.provider;
 
 import com.api.parcial.model.StockResponse;
 

@@ -1,4 +1,4 @@
-package com.api.parcial.model;
+package main.java.com.api.parcial.model;
 
 import java.util.Map;
 
