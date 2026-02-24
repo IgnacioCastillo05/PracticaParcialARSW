@@ -1,34 +1,49 @@
-package main.java.com.api.parcial.controller;
+package com.api.parcial.controller;
 
 import com.api.parcial.model.StockResponse;
 import com.api.parcial.service.StockFacadeService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Controlador REST para consultas de datos de acciones.
- * Expone endpoints para recuperar precios de acciones desde diferentes APIs.
- * Utiliza la fachada para abstrae la lógica de negocio y cachéo.
+ * Controlador REST que expone los endpoints de consulta de acciones bursátiles.
+ *
+ * <p>Todos los endpoints devuelven JSON y requieren el parámetro {@code symbol}
+ * con el ticker de la acción (ej: {@code AAPL}, {@code GOOGL}, {@code MSFT}).
+ *
+ * <p>Endpoints disponibles:
+ * <ul>
+ *   <li>{@code GET /stock/daily?symbol=AAPL}</li>
+ *   <li>{@code GET /stock/intraday?symbol=AAPL}</li>
+ *   <li>{@code GET /stock/weekly?symbol=AAPL}</li>
+ *   <li>{@code GET /stock/monthly?symbol=AAPL}</li>
+ * </ul>
+ *
+ * <p>El CORS está configurado globalmente en
+ * {@link com.api.parcial.config.CorsConfig}.
  */
 @RestController
 @RequestMapping("/stock")
-@CrossOrigin(origins = "*")
 public class StockController {
 
     private final StockFacadeService facade;
 
     /**
-     * Constructor que inyecta la dependencia del servicio fachada
-     * @param facade Servicio de fachada para operaciones de acciones
+     * Constructor con inyección del servicio fachada.
+     *
+     * @param facade Servicio que coordina proveedor y cache
      */
     public StockController(StockFacadeService facade) {
         this.facade = facade;
     }
 
     /**
-     * Obtiene los precios diarios de una acción.
-     * Los datos se cachean para evitar múltiples llamadas a la API externa.
-     * @param symbol Símbolo del ticker (ej: AAPL, GOOGL, MSFT)
-     * @return StockResponse con precios diarios
+     * Retorna los precios de cierre diarios para el símbolo indicado.
+     *
+     * @param symbol Ticker de la acción (ej: AAPL)
+     * @return JSON con símbolo, intervalo "DAILY" y mapa fecha→precio
      */
     @GetMapping("/daily")
     public StockResponse getDaily(@RequestParam String symbol) {
@@ -36,9 +51,10 @@ public class StockController {
     }
 
     /**
-     * Obtiene los precios intradiarios de una acción (cada 5 minutos).
-     * @param symbol Símbolo del ticker
-     * @return StockResponse con precios intradiarios
+     * Retorna los precios intradiarios (cada 5 min) para el símbolo indicado.
+     *
+     * @param symbol Ticker de la acción
+     * @return JSON con símbolo, intervalo "INTRADAY" y mapa timestamp→precio
      */
     @GetMapping("/intraday")
     public StockResponse getIntraday(@RequestParam String symbol) {
@@ -46,9 +62,10 @@ public class StockController {
     }
 
     /**
-     * Obtiene los precios semanales de una acción.
-     * @param symbol Símbolo del ticker
-     * @return StockResponse con precios semanales
+     * Retorna los precios de cierre semanales para el símbolo indicado.
+     *
+     * @param symbol Ticker de la acción
+     * @return JSON con símbolo, intervalo "WEEKLY" y mapa fecha→precio
      */
     @GetMapping("/weekly")
     public StockResponse getWeekly(@RequestParam String symbol) {
@@ -56,9 +73,10 @@ public class StockController {
     }
 
     /**
-     * Obtiene los precios mensuales de una acción.
-     * @param symbol Símbolo del ticker
-     * @return StockResponse con precios mensuales
+     * Retorna los precios de cierre mensuales para el símbolo indicado.
+     *
+     * @param symbol Ticker de la acción
+     * @return JSON con símbolo, intervalo "MONTHLY" y mapa fecha→precio
      */
     @GetMapping("/monthly")
     public StockResponse getMonthly(@RequestParam String symbol) {

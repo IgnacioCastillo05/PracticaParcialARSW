@@ -1,54 +1,59 @@
-package main.java.com.api.parcial.cache;
+package com.api.parcial.cache;
 
 import com.api.parcial.model.StockResponse;
-import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 /**
- * Sistema de cache en memoria para datos de acciones.
- * Evita llamadas repetidas a la API externa dentro del mismo proceso.
- * 
- * CARACTERÍSTICAS:
- * - Thread-safe: Usa ConcurrentHashMap para acceso concurrente
- * - Lazy loading: Solo calcula/obtiene datos cuando se solicitan
- * - En memoria: Rápido pero se pierde al reiniciar la aplicación
- * 
- * MEJORAS FUTURAS:
- * - Agregar TTL (Time To Live) para invalidar cache automáticamente
- * - Integrar Redis para cache distribuido
- * - Agregar eventos de invalidación manual
+ * Cache en memoria, thread-safe, para respuestas de datos de acciones.
+ *
+ * <p>Evita llamadas repetidas a la API externa para el mismo símbolo e intervalo.
+ * Usa {@link ConcurrentHashMap} para garantizar acceso seguro desde múltiples hilos.
+ *
+ * <p><b>Limitaciones actuales:</b> el cache no expira (sin TTL). Para producción
+ * se recomienda migrar a Redis con expiración automática.
+ *
+ * <p><b>Clave de cache:</b> se construye como {@code "INTERVAL_SYMBOL"},
+ * por ejemplo {@code "DAILY_AAPL"} o {@code "WEEKLY_MSFT"}.
  */
 @Component
 public class StockCache {
 
     private static final Logger logger = LoggerFactory.getLogger(StockCache.class);
+
+    /**
+     * Almacenamiento principal del cache.
+     * {@link ConcurrentHashMap} garantiza operaciones atómicas sin sincronización manual.
+     */
     private final ConcurrentHashMap<String, StockResponse> cache = new ConcurrentHashMap<>();
 
     /**
-     * Obtiene valor del cache o lo calcula si no existe.
-     * Si la clave existe, devuelve el valor cacheado.
-     * Si no existe, ejecuta el supplier (función) y guarda el resultado.
-     * 
-     * @param key Clave única del cache
-     * @param supplier Función que calcula el valor si no está en cache
-     * @return Valor cacheado o calculado
+     * Devuelve el valor cacheado para la clave dada, o lo calcula y cachea si no existe.
+     *
+     * <p>Usa {@link ConcurrentHashMap#computeIfAbsent} para garantizar que el supplier
+     * se ejecuta <em>como máximo una vez por clave</em> incluso bajo concurrencia.
+     *
+     * @param key      Clave única del cache (ej: {@code "DAILY_AAPL"})
+     * @param supplier Función que obtiene el dato real si no está en cache
+     * @return {@link StockResponse} cacheado o recién calculado
      */
     public StockResponse getOrCompute(String key, Supplier<StockResponse> supplier) {
         if (cache.containsKey(key)) {
-            logger.debug("Hit en cache para: {}", key);
+            logger.debug("Cache HIT  → {}", key);
             return cache.get(key);
-        } else {
-            logger.debug("Miss en cache para: {}. Calculando valor...", key);
-            return cache.computeIfAbsent(key, k -> supplier.get());
         }
+        logger.debug("Cache MISS → {}. Invocando proveedor...", key);
+        // computeIfAbsent es atómico: evita que dos hilos llamen al supplier a la vez
+        return cache.computeIfAbsent(key, k -> supplier.get());
     }
 
     /**
-     * Limpia una entrada específica del cache.
+     * Elimina una entrada específica del cache (invalidación manual).
+     *
      * @param key Clave a eliminar
      */
     public void invalidate(String key) {
@@ -57,16 +62,17 @@ public class StockCache {
     }
 
     /**
-     * Limpia todo el cache.
+     * Elimina todas las entradas del cache.
      */
     public void clear() {
-        logger.warn("Limpiando todo el cache");
+        logger.warn("Limpiando todo el cache ({} entradas)", cache.size());
         cache.clear();
     }
 
     /**
-     * Retorna el tamaño actual del cache.
-     * @return Número de elementos en cache
+     * Retorna el número de entradas actualmente en cache.
+     *
+     * @return Tamaño del cache
      */
     public int size() {
         return cache.size();
